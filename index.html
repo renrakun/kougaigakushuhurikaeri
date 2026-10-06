@@ -2,451 +2,445 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>のりもの探検！ミッションノート</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校外学習 ミッション探検アプリ</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap');
-    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
     body {
-      font-family: 'M PLUS Rounded 1c', sans-serif;
-      touch-action: manipulation;
-      background-color: #f0fdf4;
-      color: #1e293b;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #2c3e50;
+      color: #fff;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    h1 {
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    .reset-header-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .progress-bar-container {
+      background-color: #dcdde1;
+      height: 16px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .progress-bar {
+      background-color: #2ecc71;
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    main {
+      flex: 1;
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    /* ステップ（ページ）インジケーター */
+    .step-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: #bdc3c7;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .dot.active {
+      background-color: #3498db;
+      transform: scale(1.3);
+    }
+    .dot.completed {
+      background-color: #2ecc71;
     }
 
-    /* タップフィードバックアニメーション */
-    .btn-bounce {
-      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s;
+    /* ミッションカード */
+    .mission-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
     }
-    .btn-bounce:active {
-      transform: scale(0.94);
+    .mission-title {
+      font-size: 1.4rem;
+      color: #2c3e50;
+      margin: 0 0 8px 0;
     }
-
-    /* スライド切替時のふわっと表示 */
-    .slide-enter {
-      animation: slideIn 0.3s ease-out forwards;
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* クリアスタンプのアニメーション */
-    .stamp-badge {
-      animation: stampPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    @keyframes stampPop {
-      0% { transform: scale(3) rotate(-20deg); opacity: 0; }
-      100% { transform: scale(1) rotate(-10deg); opacity: 1; }
+    .mission-desc {
+      font-size: 1rem;
+      color: #7f8c8d;
+      margin: 0 0 16px 0;
     }
 
-    /* 紙吹雪用キャンバス */
-    #confettiCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 100;
+    /* 画像プレビューエリア */
+    .image-container {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border: 3px dashed #cbd5e1;
+      border-radius: 12px;
+      background-color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 16px;
     }
+    .image-container.has-photo {
+      border: 3px solid #2ecc71;
+    }
+    .preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .placeholder-text {
+      color: #94a3b8;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    /* ボタン類 */
+    .btn-action {
+      display: inline-block;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #fff;
+      background-color: #3498db;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #2980b9;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .btn-action:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #2980b9;
+    }
+    .btn-delete {
+      background-color: #e74c3c;
+      box-shadow: 0 4px 0 #c0392b;
+    }
+    .btn-delete:active {
+      box-shadow: 0 2px 0 #c0392b;
+    }
+
+    /* ページ送りナビゲーション */
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-nav {
+      flex: 1;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: white;
+      background-color: #7f8c8d;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #95a5a6;
+      text-align: center;
+    }
+    .btn-nav:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #95a5a6;
+    }
+    .btn-nav.btn-next {
+      background-color: #2ecc71;
+      box-shadow: 0 4px 0 #27ae60;
+    }
+    .btn-nav.btn-next:active {
+      box-shadow: 0 2px 0 #27ae60;
+    }
+    .btn-nav:disabled {
+      background-color: #bdc3c7;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* クリアバッジ */
+    .clear-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background-color: #2ecc71;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: none;
+    }
+
+    .file-input { display: none; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 max-w-2xl mx-auto select-none">
+<body>
 
-  <!-- ヘッダーエリア -->
-  <header class="bg-white rounded-3xl p-4 shadow-sm border-2 border-emerald-200 mb-3">
-    <div class="flex justify-between items-center mb-2">
-      <h1 class="text-xl sm:text-2xl font-black text-emerald-800 flex items-center gap-2">
-        <span>🚩</span> のりもの探検ノート
-      </h1>
-      <span id="pageIndicator" class="bg-emerald-100 text-emerald-900 font-extrabold px-3 py-1 rounded-full text-base sm:text-lg border border-emerald-300">
-        1 / 4
-      </span>
-    </div>
-
-    <!-- ステップドット表示 (1, 2, 3, 4) -->
-    <div id="stepDots" class="flex justify-center items-center gap-2 mb-3">
-      <!-- JavaScriptで動的生成 -->
-    </div>
-
-    <!-- 全体進捗バー -->
-    <div class="w-full bg-slate-100 h-6 rounded-full border-2 border-slate-200 overflow-hidden relative">
-      <div id="progressBar" class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full w-0 transition-all duration-500 ease-out flex items-center justify-end pr-2">
-        <span id="progressText" class="text-xs font-black text-white drop-shadow">0%</span>
-      </div>
-    </div>
+  <header>
+    <h1>🚩 校外学習 ミッション</h1>
+    <button class="reset-header-btn" onclick="confirmResetAll()">最初からやり直す</button>
   </header>
 
-  <!-- メインコンテンツ（スライドエリア） -->
-  <main id="slideContainer" class="flex-1 flex flex-col justify-between bg-white rounded-3xl p-4 sm:p-6 shadow-lg border-4 border-emerald-300 slide-enter relative overflow-hidden">
-    
-    <!-- 達成クリアスタンプ表示エリア -->
-    <div id="stampArea" class="hidden absolute top-4 right-4 z-20 pointer-events-none">
-      <div class="stamp-badge bg-amber-400 text-amber-950 font-black px-4 py-2 rounded-2xl border-4 border-white shadow-xl flex items-center gap-1 text-lg sm:text-xl">
-        <i class="fa-solid fa-star text-amber-100"></i> CLEAR!
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <main>
+    <!-- ステップ表示 -->
+    <div class="step-dots" id="stepDots"></div>
+
+    <!-- メインカード -->
+    <div class="mission-card">
+      <div class="clear-badge" id="clearBadge">クリア！</div>
+      <h2 class="mission-title" id="missionTitle">① エレベーター</h2>
+      <p class="mission-desc" id="missionDesc">説明文がここに入ります</p>
+
+      <div class="image-container" id="imageContainer">
+        <span class="placeholder-text" id="placeholderText">📷 写真がまだありません</span>
+        <img src="" alt="撮影した写真" class="preview-image" id="previewImage" style="display: none;">
       </div>
-    </div>
 
-    <!-- ミッション説明文 -->
-    <div>
-      <div class="inline-block bg-emerald-100 text-emerald-900 font-extrabold px-3 py-1 rounded-lg text-sm sm:text-base mb-2">
-        ミッション <span id="missionNumber">1</span>
-      </div>
-      <h2 id="missionTitle" class="text-2xl sm:text-3xl font-black text-slate-800 mb-2 leading-snug">
-        ① エレベーター
-      </h2>
-      <p id="missionDesc" class="text-base sm:text-xl text-slate-600 font-bold mb-4 leading-relaxed">
-        エレベーターのボタンやスロープをさがそう！
-      </p>
-    </div>
+      <label class="btn-action" for="photoInput" id="uploadBtnLabel">
+        📷 写真を撮る / 選ぶ
+      </label>
+      <input type="file" id="photoInput" class="file-input" accept="image/*" capture="environment">
 
-    <!-- 写真表示・撮影エリア -->
-    <div class="my-auto py-2">
-      <div id="photoFrame" class="w-full aspect-[4/3] bg-slate-50 border-4 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner cursor-pointer" onclick="triggerFileInput()">
-        
-        <!-- 未撮影時の案内 -->
-        <div id="placeholder" class="flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-          <i id="missionIcon" class="fa-solid fa-elevator text-6xl sm:text-7xl mb-3 text-slate-300"></i>
-          <p class="font-extrabold text-base sm:text-lg text-slate-500">ここをタップして<br>しゃしんを とる・えらぶ</p>
-        </div>
-
-        <!-- プレビュー画像 -->
-        <img id="photoPreview" class="hidden w-full h-full object-cover rounded-2xl" src="" alt="ミッション写真">
-      </div>
-    </div>
-
-    <!-- カメラ/ファイル選択の隠しインプット -->
-    <input type="file" id="fileInput" class="hidden" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
-
-    <!-- 操作ボタン（撮影／削除） -->
-    <div id="buttonArea" class="mt-4 flex flex-col gap-3">
-      <!-- 撮影・変更ボタン -->
-      <button id="uploadBtn" onclick="triggerFileInput()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-lg sm:text-xl py-4 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-3">
-        <i class="fa-solid fa-camera text-2xl"></i>
-        <span id="uploadBtnText">📷 しゃしんを とる / えらぶ</span>
+      <button class="btn-action btn-delete" id="deleteBtn" onclick="deleteCurrentPhoto()" style="display: none;">
+        🗑️️ 写真を消す
       </button>
+    </div>
 
-      <!-- 削除・やり直しボタン（写真あり時のみ表示） -->
-      <button id="deleteBtn" onclick="deleteCurrentPhoto()" class="btn-bounce min-h-[52px] w-full bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 font-black text-base sm:text-lg py-3 rounded-2xl border-2 border-rose-300 hidden flex items-center justify-center gap-2">
-        <i class="fa-solid fa-trash-can"></i>
-        <span>🗑️ けす（とりなおす）</span>
-      </button>
+    <!-- ページ送りナビゲーション -->
+    <div class="nav-buttons">
+      <button class="btn-nav" id="prevBtn" onclick="changePage(-1)">◀ まえへ</button>
+      <button class="btn-nav btn-next" id="nextBtn" onclick="changePage(1)">つぎへ ▶</button>
     </div>
   </main>
 
-  <!-- ページ送りナビゲーションバー -->
-  <footer class="mt-4 grid grid-cols-2 gap-4">
-    <button id="prevBtn" onclick="changeSlide(-1)" class="btn-bounce min-h-[56px] bg-slate-200 text-slate-700 font-black text-lg sm:text-xl py-4 rounded-2xl border-b-4 border-slate-300 flex items-center justify-center gap-2 disabled:opacity-40 disabled:pointer-events-none">
-      <i class="fa-solid fa-chevron-left"></i> まえへ
-    </button>
-    <button id="nextBtn" onclick="changeSlide(1)" class="btn-bounce min-h-[56px] bg-teal-500 text-white font-black text-lg sm:text-xl py-4 rounded-2xl border-b-4 border-teal-700 flex items-center justify-center gap-2">
-      つぎへ <i class="fa-solid fa-chevron-right"></i>
-    </button>
-  </footer>
-
-  <!-- 全達成コンプリートモーダル -->
-  <div id="completeModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center border-4 border-amber-300 shadow-2xl slide-enter">
-      <div class="text-6xl mb-3">🎉</div>
-      <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">ミッションコンプリート！</h2>
-      <p class="text-base sm:text-lg text-slate-600 font-extrabold mb-4">
-        ぜんぶの しゃしんを とることが できたね！<br>はなまる！💮
-      </p>
-      
-      <!-- 4コマ写真サマリー表示 -->
-      <div id="summaryGrid" class="grid grid-cols-2 gap-2 mb-6">
-        <!-- JSで動的生成 -->
-      </div>
-
-      <button onclick="closeCompleteModal()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 text-white font-black text-lg py-4 rounded-2xl border-b-4 border-emerald-700">
-        ノートを かくにんする
-      </button>
-    </div>
-  </div>
-
-  <!-- 紙吹雪アニメーションキャンバス -->
-  <canvas id="confettiCanvas"></canvas>
-
   <script>
-    // 4つの撮影ミッション定義
+    // ミッションデータ定義（全4ページ）
     const missions = [
-      {
-        id: 1,
-        title: "① エレベーター",
-        desc: "エレベーターのボタンやスロープをさがそう！",
-        icon: "fa-elevator",
-        photo: null
-      },
-      {
-        id: 2,
-        title: "② 券売機（けんばいき）",
-        desc: "きっぷをかうところ（券売機）をパシャリ！",
-        icon: "fa-ticket",
-        photo: null
-      },
-      {
-        id: 3,
-        title: "③ 改札（かいさつ）",
-        desc: "タッチする改札（かいさつ）の写真を撮ろう！",
-        icon: "fa-door-open",
-        photo: null
-      },
-      {
-        id: 4,
-        title: "④ 電車（でんしゃ）",
-        desc: "のる電車（でんしゃ）の写真を撮ろう！",
-        icon: "fa-train",
-        photo: null
-      }
+      { id: 1, title: "① エレベーター", desc: "ボタンや入り口の写真を撮ろう！", photo: null },
+      { id: 2, title: "② 券売機", desc: "切符を買う機械の写真を撮ろう！", photo: null },
+      { id: 3, title: "③ 改札", desc: "タッチする場所や改札の写真を撮ろう！", photo: null },
+      { id: 4, title: "④ 電車", desc: "乗る電車の写真を撮ろう！", photo: null }
     ];
 
-    let currentSlide = 0; // 0: エレベーター, 1: 券売機, 2: 改札, 3: 電車
+    let currentIndex = 0;
+    const STORAGE_KEY = 'school_trip_missions_data';
 
-    // DOM要素の取得
-    const pageIndicator = document.getElementById('pageIndicator');
-    const stepDots = document.getElementById('stepDots');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const slideContainer = document.getElementById('slideContainer');
-    const missionNumber = document.getElementById('missionNumber');
-    const missionTitle = document.getElementById('missionTitle');
-    const missionDesc = document.getElementById('missionDesc');
-    const missionIcon = document.getElementById('missionIcon');
-    const photoFrame = document.getElementById('photoFrame');
-    const placeholder = document.getElementById('placeholder');
-    const photoPreview = document.getElementById('photoPreview');
-    const uploadBtnText = document.getElementById('uploadBtnText');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const stampArea = document.getElementById('stampArea');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const fileInput = document.getElementById('fileInput');
-
-    // 画面レンダリング（スライド切り替え時・写真更新時）
-    function render() {
-      const mission = missions[currentSlide];
-
-      // スライドアニメーション適用
-      slideContainer.classList.remove('slide-enter');
-      void slideContainer.offsetWidth; // リフロー
-      slideContainer.classList.add('slide-enter');
-
-      // ヘッダー＆ミッションテキスト設定
-      pageIndicator.innerText = `${currentSlide + 1} / ${missions.length}`;
-      missionNumber.innerText = currentSlide + 1;
-      missionTitle.innerText = mission.title;
-      missionDesc.innerText = mission.desc;
-
-      // アイコン画像更新
-      missionIcon.className = `fa-solid ${mission.icon} text-6xl sm:text-7xl mb-3 text-slate-300`;
-
-      // 写真の有無に応じた表示分岐
-      if (mission.photo) {
-        photoPreview.src = mission.photo;
-        photoPreview.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-        photoFrame.classList.remove('border-dashed', 'bg-slate-50');
-        photoFrame.classList.add('border-emerald-400');
-        
-        uploadBtnText.innerText = "🔄 とりなおす";
-        deleteBtn.classList.remove('hidden');
-        stampArea.classList.remove('hidden');
-      } else {
-        photoPreview.src = "";
-        photoPreview.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        photoFrame.classList.add('border-dashed', 'bg-slate-50');
-        photoFrame.classList.remove('border-emerald-400');
-
-        uploadBtnText.innerText = "📷 しゃしんを とる / えらぶ";
-        deleteBtn.classList.add('hidden');
-        stampArea.classList.add('hidden');
-      }
-
-      // ナビゲーションボタンの制御
-      prevBtn.disabled = currentSlide === 0;
-      
-      if (currentSlide === missions.length - 1) {
-        nextBtn.innerHTML = `かんりょう <i class="fa-solid fa-check"></i>`;
-      } else {
-        nextBtn.innerHTML = `つぎへ <i class="fa-solid fa-chevron-right"></i>`;
-      }
-
-      // ステップドットの描画
-      renderStepDots();
-
-      // 全体進捗バーの更新
-      updateProgress();
+    // 初期化処理
+    function init() {
+      loadData();
+      renderPage();
     }
 
-    // ステップドット表示
-    function renderStepDots() {
-      stepDots.innerHTML = '';
-      missions.forEach((m, idx) => {
-        const dot = document.createElement('button');
-        dot.onclick = () => { currentSlide = idx; render(); };
-        dot.className = `w-9 h-9 sm:w-10 sm:h-10 rounded-full font-black text-sm sm:text-base flex items-center justify-center transition-all ${
-          idx === currentSlide
-            ? 'bg-emerald-500 text-white ring-4 ring-emerald-200 scale-110 shadow-md'
-            : m.photo
-            ? 'bg-teal-100 text-teal-800 border-2 border-teal-400'
-            : 'bg-slate-100 text-slate-400 border-2 border-slate-200'
-        }`;
-        dot.innerHTML = m.photo ? `<i class="fa-solid fa-check text-xs sm:text-sm"></i>` : `${idx + 1}`;
-        stepDots.appendChild(dot);
-      });
-    }
-
-    // 進捗（％）の更新
-    function updateProgress() {
-      const completedCount = missions.filter(m => m.photo !== null).length;
-      const percent = Math.round((completedCount / missions.length) * 100);
-
-      progressBar.style.width = `${percent}%`;
-      progressText.innerText = `${percent}%`;
-    }
-
-    // スライド前後移動
-    function changeSlide(direction) {
-      const newSlide = currentSlide + direction;
-      if (newSlide >= 0 && newSlide < missions.length) {
-        currentSlide = newSlide;
-        render();
-      } else if (newSlide === missions.length) {
-        // 最終ページで完了を押したとき
-        const completedCount = missions.filter(m => m.photo !== null).length;
-        if (completedCount === missions.length) {
-          showCompleteModal();
-        } else {
-          alert('まだ とっていない しゃしんが あるよ！');
+    // ローカルストレージからデータ読み込み
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          parsed.forEach((item, idx) => {
+            if (missions[idx]) {
+              missions[idx].photo = item.photo;
+            }
+          });
+        } catch (e) {
+          console.error("データの読み込みに失敗しました", e);
         }
       }
     }
 
-    // カメラ/ファイル選択の起動
-    function triggerFileInput() {
-      fileInput.click();
+    // ローカルストレージへデータ保存
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(missions));
     }
 
-    // 写真ファイルの読み込み
-    function handleFileSelect(e) {
+    // 画面表示の更新
+    function renderPage() {
+      const current = missions[currentIndex];
+
+      // テキスト・情報設定
+      document.getElementById('missionTitle').innerText = current.title;
+      document.getElementById('missionDesc').innerText = current.desc;
+
+      const imgContainer = document.getElementById('imageContainer');
+      const previewImg = document.getElementById('previewImage');
+      const placeholder = document.getElementById('placeholderText');
+      const deleteBtn = document.getElementById('deleteBtn');
+      const uploadLabel = document.getElementById('uploadBtnLabel');
+      const clearBadge = document.getElementById('clearBadge');
+
+      if (current.photo) {
+        previewImg.src = current.photo;
+        previewImg.style.display = 'block';
+        placeholder.style.display = 'none';
+        imgContainer.classList.add('has-photo');
+        deleteBtn.style.display = 'block';
+        uploadLabel.innerText = '🔄 撮り直す';
+        clearBadge.style.display = 'block';
+      } else {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+        placeholder.style.display = 'block';
+        imgContainer.classList.remove('has-photo');
+        deleteBtn.style.display = 'none';
+        uploadLabel.innerText = '📷 写真を撮る / 選ぶ';
+        clearBadge.style.display = 'none';
+      }
+
+      // ナビゲーションボタン制御
+      document.getElementById('prevBtn').disabled = (currentIndex === 0);
+      const nextBtn = document.getElementById('nextBtn');
+      if (currentIndex === missions.length - 1) {
+        nextBtn.innerText = 'おわり';
+      } else {
+        nextBtn.innerText = 'つぎへ ▶';
+      }
+
+      // ドット表示更新
+      renderDots();
+
+      // 進捗バー更新
+      const completedCount = missions.filter(m => m.photo !== null).length;
+      const percent = Math.round((completedCount / missions.length) * 100);
+      document.getElementById('progressBar').style.width = percent + '%';
+    }
+
+    // ドット表示作成
+    function renderDots() {
+      const dotsContainer = document.getElementById('stepDots');
+      dotsContainer.innerHTML = '';
+      missions.forEach((m, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        if (idx === currentIndex) dot.classList.add('active');
+        if (m.photo) dot.classList.add('completed');
+        dot.onclick = () => {
+          currentIndex = idx;
+          renderPage();
+        };
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    // ページ移動
+    function changePage(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < missions.length) {
+        currentIndex = newIndex;
+        renderPage();
+      }
+    }
+
+    // 現在のページの写真削除
+    function deleteCurrentPhoto() {
+      missions[currentIndex].photo = null;
+      saveData();
+      renderPage();
+    }
+
+    // 全データリセット
+    function confirmResetAll() {
+      if (confirm("すべての写真と記録を消去して、最初からやり直しますか？")) {
+        missions.forEach(m => m.photo = null);
+        localStorage.removeItem(STORAGE_KEY);
+        currentIndex = 0;
+        renderPage();
+      }
+    }
+
+    // 画像圧縮とアップロード処理
+    document.getElementById('photoInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function(event) {
-          missions[currentSlide].photo = event.target.result;
-          render();
-          
-          // 全ミッションクリアチェック
-          const completedCount = missions.filter(m => m.photo !== null).length;
-          if (completedCount === missions.length) {
-            setTimeout(showCompleteModal, 400);
-          }
+          const img = new Image();
+          img.onload = function() {
+            // 画像のリサイズ（容量制限対策）
+            const canvas = document.createElement('canvas');
+            const maxDimension = 800; // 最大サイズ 800px
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxDimension) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              }
+            } else {
+              if (height > maxDimension) {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 画質0.7のJPEGに変換して保存
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            missions[currentIndex].photo = compressedDataUrl;
+            saveData();
+            renderPage();
+          };
+          img.src = event.target.result;
         };
         reader.readAsDataURL(file);
       }
-      fileInput.value = '';
-    }
-
-    // 写真データの消去
-    function deleteCurrentPhoto() {
-      missions[currentSlide].photo = null;
-      render();
-    }
-
-    // 全達成お祝いモーダル表示
-    function showCompleteModal() {
-      const modal = document.getElementById('completeModal');
-      const summaryGrid = document.getElementById('summaryGrid');
-      
-      summaryGrid.innerHTML = '';
-      missions.forEach((m, idx) => {
-        const item = document.createElement('div');
-        item.className = 'aspect-[4/3] rounded-xl border-2 border-slate-200 overflow-hidden bg-slate-100 relative shadow-sm';
-        if (m.photo) {
-          item.innerHTML = `<img src="${m.photo}" class="w-full h-full object-cover">
-                            <span class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded-md font-bold">${m.title.split(' ')[0]}</span>`;
-        } else {
-          item.innerHTML = `<div class="w-full h-full flex items-center justify-center text-slate-400 font-bold">${idx + 1}</div>`;
-        }
-        summaryGrid.appendChild(item);
-      });
-
-      modal.classList.remove('hidden');
-      startConfetti();
-    }
-
-    function closeCompleteModal() {
-      document.getElementById('completeModal').classList.add('hidden');
-    }
-
-    // 紙吹雪アニメーション
-    let animationFrameId;
-    function startConfetti() {
-      const canvas = document.getElementById('confettiCanvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      const pieces = [];
-      const numberOfPieces = 90;
-      const colors = ['#f43f5e', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
-
-      for (let i = 0; i < numberOfPieces; i++) {
-        pieces.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height - canvas.height,
-          size: Math.random() * 12 + 6,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          speed: Math.random() * 5 + 2,
-          rotation: Math.random() * 360,
-          rotationSpeed: Math.random() * 10 - 5
-        });
-      }
-
-      function update() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        pieces.forEach(p => {
-          p.y += p.speed;
-          p.rotation += p.rotationSpeed;
-
-          if (p.y > canvas.height) {
-            p.y = -20;
-            p.x = Math.random() * canvas.width;
-          }
-
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate((p.rotation * Math.PI) / 180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-          ctx.restore();
-        });
-
-        animationFrameId = requestAnimationFrame(update);
-      }
-
-      cancelAnimationFrame(animationFrameId);
-      update();
-
-      setTimeout(() => {
-        cancelAnimationFrame(animationFrameId);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }, 4500);
-    }
-
-    window.addEventListener('resize', () => {
-      const canvas = document.getElementById('confettiCanvas');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
     });
 
-    // 初期化表示
-    render();
+    // アプリ起動
+    init();
   </script>
 </body>
 </html>

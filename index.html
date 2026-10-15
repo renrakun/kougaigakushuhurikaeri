@@ -105,7 +105,7 @@
 
     <!-- 写真表示・撮影エリア -->
     <div class="my-auto py-2">
-      <div id="photoFrame" class="w-full aspect-[4/3] bg-slate-50 border-4 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner cursor-pointer" onclick="triggerFileInput()">
+      <div id="photoFrame" class="w-full aspect-[4/3] bg-slate-50 border-4 border-dashed border-slate-300 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner cursor-pointer" onclick="openPhotoSourceModal()">
         
         <!-- 未撮影時の案内 -->
         <div id="placeholder" class="flex flex-col items-center justify-center text-slate-400 p-4 text-center">
@@ -118,13 +118,16 @@
       </div>
     </div>
 
-    <!-- カメラ/ファイル選択の隠しインプット -->
-    <input type="file" id="fileInput" class="hidden" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+    <!-- カメラ/ファイル選択の隠しインプット (2種類準備) -->
+    <!-- 直接カメラを起動する用 -->
+    <input type="file" id="cameraInput" class="hidden" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+    <!-- ライブラリ/アルバムから選ぶ用 -->
+    <input type="file" id="libraryInput" class="hidden" accept="image/*" onchange="handleFileSelect(event)">
 
     <!-- 操作ボタン（撮影／削除） -->
     <div id="buttonArea" class="mt-4 flex flex-col gap-3">
       <!-- 撮影・変更ボタン -->
-      <button id="uploadBtn" onclick="triggerFileInput()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-lg sm:text-xl py-4 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-3">
+      <button id="uploadBtn" onclick="openPhotoSourceModal()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-lg sm:text-xl py-4 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-3">
         <i class="fa-solid fa-camera text-2xl"></i>
         <span id="uploadBtnText">📷 しゃしんを とる / えらぶ</span>
       </button>
@@ -146,6 +149,32 @@
       つぎへ <i class="fa-solid fa-chevron-right"></i>
     </button>
   </footer>
+
+  <!-- 写真取得方法の選択モーダル -->
+  <div id="photoSourceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center border-4 border-emerald-300 shadow-2xl slide-enter">
+      <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-4">しゃしんをどうする？</h3>
+      
+      <div class="flex flex-col gap-3 mb-4">
+        <!-- カメラで撮影ボタン -->
+        <button onclick="triggerCamera()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg py-3 rounded-2xl border-b-4 border-emerald-700 flex items-center justify-center gap-3">
+          <i class="fa-solid fa-camera text-2xl"></i>
+          <span>カメラで とる</span>
+        </button>
+
+        <!-- ライブラリから選ぶボタン -->
+        <button onclick="triggerLibrary()" class="btn-bounce min-h-[56px] w-full bg-teal-500 hover:bg-teal-600 text-white font-black text-lg py-3 rounded-2xl border-b-4 border-teal-700 flex items-center justify-center gap-3">
+          <i class="fa-solid fa-images text-2xl"></i>
+          <span>ライブラリから えらぶ</span>
+        </button>
+      </div>
+
+      <!-- キャンセルボタン -->
+      <button onclick="closePhotoSourceModal()" class="w-full py-3 text-slate-500 font-bold text-base hover:text-slate-700">
+        キャンセル
+      </button>
+    </div>
+  </div>
 
   <!-- 全達成コンプリートモーダル -->
   <div id="completeModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -223,7 +252,9 @@
     const stampArea = document.getElementById('stampArea');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const fileInput = document.getElementById('fileInput');
+    const cameraInput = document.getElementById('cameraInput');
+    const libraryInput = document.getElementById('libraryInput');
+    const photoSourceModal = document.getElementById('photoSourceModal');
 
     // 画面レンダリング（スライド切り替え時・写真更新時）
     function render() {
@@ -326,9 +357,24 @@
       }
     }
 
-    // カメラ/ファイル選択の起動
-    function triggerFileInput() {
-      fileInput.click();
+    // 写真選択モーダルの制御
+    function openPhotoSourceModal() {
+      photoSourceModal.classList.remove('hidden');
+    }
+
+    function closePhotoSourceModal() {
+      photoSourceModal.classList.add('hidden');
+    }
+
+    // モーダルからの選択処理
+    function triggerCamera() {
+      closePhotoSourceModal();
+      cameraInput.click();
+    }
+
+    function triggerLibrary() {
+      closePhotoSourceModal();
+      libraryInput.click();
     }
 
     // 写真ファイルの読み込み
@@ -338,6 +384,7 @@
         const reader = new FileReader();
         reader.onload = function(event) {
           missions[currentSlide].photo = event.target.result;
+          saveData();
           render();
           
           // 全ミッションクリアチェック
@@ -348,13 +395,35 @@
         };
         reader.readAsDataURL(file);
       }
-      fileInput.value = '';
+      e.target.value = '';
     }
 
     // 写真データの消去
     function deleteCurrentPhoto() {
       missions[currentSlide].photo = null;
+      saveData();
       render();
+    }
+
+    // ローカルストレージ関連の関数
+    function saveData() {
+      localStorage.setItem('missionPhotos', JSON.stringify(missions));
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem('missionPhotos');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          parsed.forEach((m, index) => {
+            if (missions[index]) {
+              missions[index].photo = m.photo;
+            }
+          });
+        } catch (e) {
+          console.error("データの読み込みに失敗しました", e);
+        }
+      }
     }
 
     // 全達成お祝いモーダル表示
@@ -407,27 +476,6 @@
         });
       }
 
-      // 1. データをローカルストレージに保存する関数
-　　　function saveData() {
-　　　  localStorage.setItem('missionPhotos', JSON.stringify(missions));
-}
-
-　　　// 2. 保存されたデータを読み込む関数
-　　　function loadData() {
-　　　  const saved = localStorage.getItem('missionPhotos');
-　　　　  if (saved) {
- 　　　　   const parsed = JSON.parse(saved);
-    // 保存されている写真データを現在のミッションに反映
- 　　　　   parsed.forEach((m, index) => {
-  　　　　    if (missions[index]) {
-   　　　　     missions[index].photo = m.photo;
-      }
-    });
-  }
-}
-
-　　　　// 3. 写真の変更時や削除時に saveData() を呼び出し、アプリ起動時に loadData() を実行する
-
       function update() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -466,7 +514,8 @@
       canvas.height = window.innerHeight;
     });
 
-    // 初期化表示
+    // アプリ起動時の処理
+    loadData();
     render();
   </script>
 </body>

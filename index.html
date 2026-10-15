@@ -42,6 +42,15 @@
       100% { transform: scale(1) rotate(-10deg); opacity: 1; }
     }
 
+    /* トースト通知のアニメーション */
+    .toast-enter {
+      animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translate(-50%, 20px) scale(0.8); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+
     /* 紙吹雪用キャンバス */
     #confettiCanvas {
       position: fixed;
@@ -118,25 +127,31 @@
       </div>
     </div>
 
-    <!-- カメラ/ファイル選択の隠しインプット (2種類準備) -->
-    <!-- 直接カメラを起動する用 -->
+    <!-- カメラ/ファイル選択の隠しインプット -->
     <input type="file" id="cameraInput" class="hidden" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
-    <!-- ライブラリ/アルバムから選ぶ用 -->
     <input type="file" id="libraryInput" class="hidden" accept="image/*" onchange="handleFileSelect(event)">
 
-    <!-- 操作ボタン（撮影／削除） -->
-    <div id="buttonArea" class="mt-4 flex flex-col gap-3">
+    <!-- 操作ボタン（撮影／保存／削除） -->
+    <div id="buttonArea" class="mt-4 flex flex-col gap-2.5">
       <!-- 撮影・変更ボタン -->
-      <button id="uploadBtn" onclick="openPhotoSourceModal()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-lg sm:text-xl py-4 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-3">
+      <button id="uploadBtn" onclick="openPhotoSourceModal()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-black text-lg sm:text-xl py-3.5 rounded-2xl shadow-md border-b-4 border-emerald-700 flex items-center justify-center gap-3">
         <i class="fa-solid fa-camera text-2xl"></i>
         <span id="uploadBtnText">📷 しゃしんを とる / えらぶ</span>
       </button>
 
-      <!-- 削除・やり直しボタン（写真あり時のみ表示） -->
-      <button id="deleteBtn" onclick="deleteCurrentPhoto()" class="btn-bounce min-h-[52px] w-full bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 font-black text-base sm:text-lg py-3 rounded-2xl border-2 border-rose-300 hidden flex items-center justify-center gap-2">
-        <i class="fa-solid fa-trash-can"></i>
-        <span>🗑️ けす（とりなおす）</span>
-      </button>
+      <div class="grid grid-cols-2 gap-2.5">
+        <!-- 途中でデータを保存するボタン -->
+        <button id="saveBtn" onclick="manualSaveData()" class="btn-bounce min-h-[50px] bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-amber-950 font-black text-base sm:text-lg py-2.5 rounded-2xl border-b-4 border-amber-600 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-xl"></i>
+          <span>💾 とちゅうほぞん</span>
+        </button>
+
+        <!-- 削除・とりなおしボタン -->
+        <button id="deleteBtn" onclick="deleteCurrentPhoto()" class="btn-bounce min-h-[50px] bg-rose-100 hover:bg-rose-200 active:bg-rose-300 text-rose-700 font-black text-base sm:text-lg py-2.5 rounded-2xl border-2 border-rose-300 hidden flex items-center justify-center gap-2">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>🗑️ けす</span>
+        </button>
+      </div>
     </div>
   </main>
 
@@ -156,20 +171,17 @@
       <h3 class="text-xl sm:text-2xl font-black text-slate-800 mb-4">しゃしんをどうする？</h3>
       
       <div class="flex flex-col gap-3 mb-4">
-        <!-- カメラで撮影ボタン -->
         <button onclick="triggerCamera()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg py-3 rounded-2xl border-b-4 border-emerald-700 flex items-center justify-center gap-3">
           <i class="fa-solid fa-camera text-2xl"></i>
           <span>カメラで とる</span>
         </button>
 
-        <!-- ライブラリから選ぶボタン -->
         <button onclick="triggerLibrary()" class="btn-bounce min-h-[56px] w-full bg-teal-500 hover:bg-teal-600 text-white font-black text-lg py-3 rounded-2xl border-b-4 border-teal-700 flex items-center justify-center gap-3">
           <i class="fa-solid fa-images text-2xl"></i>
           <span>ライブラリから えらぶ</span>
         </button>
       </div>
 
-      <!-- キャンセルボタン -->
       <button onclick="closePhotoSourceModal()" class="w-full py-3 text-slate-500 font-bold text-base hover:text-slate-700">
         キャンセル
       </button>
@@ -193,6 +205,13 @@
       <button onclick="closeCompleteModal()" class="btn-bounce min-h-[56px] w-full bg-emerald-500 text-white font-black text-lg py-4 rounded-2xl border-b-4 border-emerald-700">
         ノートを かくにんする
       </button>
+    </div>
+  </div>
+
+  <!-- 保存完了トースト通知 -->
+  <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="bg-slate-900/90 text-white font-black text-base sm:text-lg px-6 py-3 rounded-full shadow-2xl border-2 border-amber-400 flex items-center gap-2 toast-enter">
+      <span class="text-xl">💮</span> ほぞんしたよ！
     </div>
   </div>
 
@@ -255,6 +274,7 @@
     const cameraInput = document.getElementById('cameraInput');
     const libraryInput = document.getElementById('libraryInput');
     const photoSourceModal = document.getElementById('photoSourceModal');
+    const toast = document.getElementById('toast');
 
     // 画面レンダリング（スライド切り替え時・写真更新時）
     function render() {
@@ -384,7 +404,7 @@
         const reader = new FileReader();
         reader.onload = function(event) {
           missions[currentSlide].photo = event.target.result;
-          saveData();
+          saveData(); // 自動保存
           render();
           
           // 全ミッションクリアチェック
@@ -401,15 +421,36 @@
     // 写真データの消去
     function deleteCurrentPhoto() {
       missions[currentSlide].photo = null;
-      saveData();
+      saveData(); // 自動保存
       render();
     }
 
-    // ローカルストレージ関連の関数
+    // ローカルストレージへの保存処理
     function saveData() {
-      localStorage.setItem('missionPhotos', JSON.stringify(missions));
+      try {
+        localStorage.setItem('missionPhotos', JSON.stringify(missions));
+      } catch (e) {
+        console.error("データの保存に失敗しました", e);
+      }
     }
 
+    // 「とちゅうほぞん」ボタンを押したときの処理
+    function manualSaveData() {
+      saveData();
+      showToast();
+    }
+
+    // 保存完了のポップアップ（トースト）表示
+    let toastTimeout;
+    function showToast() {
+      clearTimeout(toastTimeout);
+      toast.classList.remove('hidden');
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2000);
+    }
+
+    // ローカルストレージからの読み込み処理
     function loadData() {
       const saved = localStorage.getItem('missionPhotos');
       if (saved) {
